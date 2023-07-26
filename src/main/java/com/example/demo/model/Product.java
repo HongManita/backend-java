@@ -62,11 +62,5 @@ public class Product {
 		this.productDetail = productDetail;
 	}
 	
-	
 
-	
-	
-	
-	
-	
 }
