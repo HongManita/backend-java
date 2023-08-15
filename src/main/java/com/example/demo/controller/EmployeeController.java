@@ -15,14 +15,27 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.model.Employee;
+import com.example.demo.model.Role;
+import com.example.demo.model.Skill;
 import com.example.demo.repository.EmployeeRepositoty;
+import com.example.demo.repository.RoleRepository;
+import com.example.demo.repository.SkillRepository;
 
 @RestController
 public class EmployeeController {
 	
+	
+
+
+
 	@Autowired
 	EmployeeRepositoty employeeRepositoty;
-
+	
+	@Autowired
+	RoleRepository roleRepository;
+	
+	@Autowired
+	SkillRepository skillRepository;
 	
 	
 	private List<Employee> data = new ArrayList<Employee>();
@@ -44,13 +57,31 @@ public class EmployeeController {
 	public ResponseEntity<Object> addEmployee(@RequestBody Employee body){
 		
 	try {
-		Employee employee = employeeRepositoty.save(body);
-		return new ResponseEntity<>(employee, HttpStatus.CREATED);
-	    }catch (Exception e) {
-		return new ResponseEntity<>("Internal server error",HttpStatus.CREATED);
 		
-	}
-	}
+		Optional<Role> role = roleRepository.findById(4);
+		body.setRole(role.get());
+		
+		Employee employee =  employeeRepositoty.save(body);
+		
+		
+		
+		for(Skill skill: body.getSkills()) {
+        	skill.setEmployee(employee);
+        	
+        	skillRepository.save(skill);
+        	
+		}
+		
+		return new ResponseEntity<>(employee, HttpStatus.CREATED);
+		
+		} catch (Exception e) {
+		e.printStackTrace();
+		return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+
+	
+}
 	
 	
 	
@@ -76,8 +107,9 @@ public class EmployeeController {
 	
 	
 	@PutMapping("employee/{employeeId}")
-	public Employee updateEmployee(@PathVariable Integer employeeId,@RequestBody Employee body) {
+	public  ResponseEntity<Object> updateEmployee(@PathVariable Integer employeeId,@RequestBody Employee body) {
 		
+		try {
 		Optional<Employee> employee = employeeRepositoty.findById(employeeId);
 		
 		if(employee.isPresent()) {
@@ -88,10 +120,13 @@ public class EmployeeController {
 			employeeEdit.setEmployeeId(body.getEmployeeId());
 			
 			employeeRepositoty.save(employee.get());
+			return new ResponseEntity<>(employee, HttpStatus.OK);
 			
-			return employee.get();	
 		}else {
-			return null ;
+			return new ResponseEntity<>("Employee not found",HttpStatus.BAD_REQUEST);
+		}}
+		catch (Exception e) {
+			return new ResponseEntity<>("Internal server error",HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 	
